@@ -49,7 +49,7 @@ namespace SimpleTwitter.Tests.Controllers
             MessageController controller = new MessageController();
 
             // Act
-            controller.Post("value");
+            //controller.Post("value");
 
             // Assert
         }

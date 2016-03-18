@@ -12,12 +12,12 @@ namespace SimpleTwitter.Controllers
     {
         [Route("messages"), HttpGet]
         [ResponseType(typeof(List<MessageModel>))]
-        public IHttpActionResult Get(string userName, int take, int skip)
+        public IHttpActionResult Get( int take, int skip)
         {
             try
             {
                 var serv = new TwitterService();
-                var msgs = serv.GetMessages(userName, take, skip);
+                var msgs = serv.GetMessages(take, skip);
 
                 return Ok(msgs);
             }
@@ -37,8 +37,8 @@ namespace SimpleTwitter.Controllers
             return Ok(msgs);
         }
 
-        // POST api/values
-        public void Post([FromBody]string value)
+        [Route("messages/add"), HttpPost]
+        public void Post(string message, string username)
         {
         }
 

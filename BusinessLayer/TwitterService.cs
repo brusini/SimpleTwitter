@@ -20,9 +20,9 @@ namespace BusinessLayer
             _dataService = new TwitterDataService();
         }
 
-        public List<MessageModel> GetMessages(string userName, int take, int skip)
+        public List<MessageModel> GetMessages(int take, int skip)
         {
-            return _dataService.GetMessages(userName, take, skip);
+            return _dataService.GetMessages(take, skip);
         }
 
         public List<MessageModel> GetComments(int messageId)

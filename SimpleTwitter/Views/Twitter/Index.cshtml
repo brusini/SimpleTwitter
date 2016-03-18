@@ -5,19 +5,22 @@
 }
 
 <div>
-    <input type="text" id="txtMsg" />
-    <input type="button" id="btnPost" name="btnPost" value="Post" title="Post" disabled="true" />
+    <input type="text" id="txtMsg"/>
+    <input type="button" id="btnPost" name="btnPost" value="Post" title="Post" disabled="true"/>
 </div>
-<div id="results"></div>
+
 <div id="dialog-form" title="Login">
     <form>
         <fieldset>
             <label for="userName">User Name</label>
             <input type="text" name="userName" id="userName" value="" class="text ui-widget-content ui-corner-all">
-            <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+            <input type="submit" tabindex="-1" style="position: absolute; top: -1000px">
         </fieldset>
     </form>
 </div>
+<p>
+    <div id="results"></div>
+</p>
 
 @section scripts{
     <style>
@@ -91,9 +94,25 @@
                 return valid;
             };
 
+            function addMessage() {
+                var text = $('#txtMsg').val();
+                $.ajax("/api/messages/add?message=" + text + "&userName=" + userName, {
+                    dataType: "json",
+                    type: "POST",
+                    success: function (data) {
+                        //console.log(data);
+                        $("#movieTemplate").tmpl(data)
+                            .appendTo("#results");
+                    },
+                    error: function (e, s) {
+                        console.log(e);
+                    }
+                });
+            };
+
             function getMessages() {
                 var data = {
-                    userName: "brusini",
+                    userName: userName,
                     take: 100,
                     skip: 0
                 };
@@ -132,6 +151,10 @@
                     return true;
                 }
             };
+
+            $("#btnPost").button().on("click", function () {
+                addMessage();
+            });
 
             dialog.dialog("open");
             getMessages();

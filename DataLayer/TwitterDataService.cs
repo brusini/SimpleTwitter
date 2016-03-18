@@ -8,11 +8,11 @@ namespace DataLayer
 {
     public class TwitterDataService : IDataService
     {
-        public List<MessageModel> GetMessages(string userName, int take, int skip)
+        public List<MessageModel> GetMessages(int take, int skip)
         {
             using (var db = new DBModelDataContext())
             {
-                var msgs = db.Messages.Where(r => r.UserName.Equals(userName))
+                var msgs = db.Messages
                         .OrderByDescending(r => r.DatePosted)
                         .Take(take)
                         .Skip(skip)
