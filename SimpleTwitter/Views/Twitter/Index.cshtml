@@ -1,0 +1,140 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div>
+    <input type="text" id="txtMsg" />
+    <input type="button" id="btnPost" name="btnPost" value="Post" title="Post" disabled="true" />
+</div>
+<div id="results"></div>
+<div id="dialog-form" title="Login">
+    <form>
+        <fieldset>
+            <label for="userName">User Name</label>
+            <input type="text" name="userName" id="userName" value="" class="text ui-widget-content ui-corner-all">
+            <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+        </fieldset>
+    </form>
+</div>
+
+@section scripts{
+    <style>
+        label, input {
+            display: block;
+        }
+        input.text {
+            margin-bottom: 12px;
+            width: 95%;
+            padding: .4em;
+        }
+        fieldset {
+            padding: 0;
+            border: 0;
+            margin-top: 25px;
+        }
+        h1 {
+            font-size: 1.2em;
+            margin: .6em 0;
+        }
+        .ui-dialog .ui-state-error {
+            padding: .3em;
+        }
+        .validateTips {
+            border: 1px solid transparent;
+            padding: 0.3em;
+        }
+        .userName {
+            color: #fff;
+        }
+    </style>
+    <script id="movieTemplate" type="text/x-jquery-tmpl">
+        <div>
+            <div>${TextMessage}</div>
+            <div>${DatePosted}</div>
+            <div>${UserName}</div>
+        </div>
+    </script>
+
+    <script type="text/javascript">
+
+        $(document).ready(function() {
+
+        });
+
+        $(function() {
+
+            userName = null, tips = $(".validateTips"), txtUserName = $("#userName");
+
+            var dialog = $("#dialog-form").dialog({
+                autoOpen: true,
+                width: 450,
+                modal: true,
+                buttons: {
+                    "Login": doLogin
+                }
+            });
+
+            function doLogin() {
+                var valid = true;
+                var allFields = $([]).add(txtUserName);
+                allFields.removeClass("ui-state-error");
+
+                valid = valid && checkLength(txtUserName, "userName", 3, 16);
+                if (valid) {
+                    userName = txtUserName.val();
+                    dialog.dialog("close");
+                    $("#btnPost").attr('disabled', false);
+                    $('.userName').html("&#64;" + userName);
+                }
+                return valid;
+            };
+
+            function getMessages() {
+                var data = {
+                    userName: "brusini",
+                    take: 100,
+                    skip: 0
+                };
+
+                $.ajax("/api/messages", {
+                    data: data,
+                    dataType: "json",
+                    type: "GET",
+                    success: function(data) {
+                        //console.log(data);
+                        $("#movieTemplate").tmpl(data)
+                            .appendTo("#results");
+                    },
+                    error: function(e, s) {
+                        console.log(e);
+                    }
+                });
+            };
+
+            function updateTips(t) {
+                tips
+                    .text(t)
+                    .addClass("ui-state-highlight");
+                setTimeout(function() {
+                    tips.removeClass("ui-state-highlight", 1500);
+                }, 500);
+            }
+
+            function checkLength(o, n, min, max) {
+                if (o.val().length > max || o.val().length < min) {
+                    o.addClass("ui-state-error");
+                    updateTips("Length of " + n + " must be between " +
+                        min + " and " + max + ".");
+                    return false;
+                } else {
+                    return true;
+                }
+            };
+
+            dialog.dialog("open");
+            getMessages();
+        });
+    </script>
+}

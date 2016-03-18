@@ -102,9 +102,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SimpleTwitter\SimpleTwitter.csproj">
+    <ProjectReference Include="..\SimpleTwitter\Web.csproj">
       <Project>{d63f1a4e-539e-400b-80e4-eb899fc463a1}</Project>
-      <Name>SimpleTwitter</Name>
+      <Name>Web</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
