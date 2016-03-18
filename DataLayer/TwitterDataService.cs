@@ -14,8 +14,8 @@ namespace DataLayer
             {
                 var msgs = db.Messages
                         .OrderByDescending(r => r.DatePosted)
-                        .Take(take)
                         .Skip(skip)
+                        .Take(take)
                         .Select(r => new MessageModel
                         {
                             UserName = r.UserName,
