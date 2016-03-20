@@ -9,5 +9,6 @@ namespace Model
         public string TextMessage { get; set; }
         public DateTime DatePosted { get; set; }
         public string UserName { get; set; }
+        public int Comments { get; set; }
     }
 }

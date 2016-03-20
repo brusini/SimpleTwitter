@@ -12,7 +12,7 @@ namespace DataLayer
         {
             using (var db = new DBModelDataContext())
             {
-                var msgs = db.Messages
+                var msgs = db.Messages.Where(r => r.MessageId == null)
                         .OrderByDescending(r => r.DatePosted)
                         .Skip(skip)
                         .Take(take)
@@ -22,7 +22,8 @@ namespace DataLayer
                             DatePosted = r.DatePosted,
                             Id = r.Id,
                             MessageId = r.MessageId,
-                            TextMessage = r.TextMessage
+                            TextMessage = r.TextMessage,
+                            Comments = db.Messages.Count(c=>c.MessageId == r.Id)
                         }).ToList();
 
                 return msgs;

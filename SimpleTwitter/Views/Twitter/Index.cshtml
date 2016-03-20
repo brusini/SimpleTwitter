@@ -59,6 +59,13 @@
         .userName {
             color: #fff;
         }
+
+        .loading {
+            color: red;
+        }
+        .showComments{
+        cursor:pointer;
+        }
     </style>
     <script id="postTemplate" type="text/x-jquery-tmpl">
         <p>
@@ -66,12 +73,32 @@
                 <div>${UserName} ${Manager.formatDate(DatePosted)}</div>
                 <div>${TextMessage}</div>
             </div>
+            <div id="comments_${Id}">
+
+            </div>
+            <div><a class="showComments" id="showComments_${Id}" msgId="${Id}">${Comments} comment(s)</a></div>
+            <div id="comments_${Id}"  class="hidden"></div>
+            <div id="comment-form_${Id}" class="comment-form hidden" msgId="${Id}">
+                <form>
+                    <span>
+                        <input type="text" id="txtComment_${Id}" />
+                    </span>
+                    <span><input type="submit" class="btnComment" id="btnComment" value="Comment" title="Comment" disabled="true" /></span>
+                </form>
+            </div>
             <hr />
+        </p>
+    </script>
+    <script id="commentTemplate" type="text/x-jquery-tmpl">
+        <p>
+            <div>
+                <div>${UserName} ${Manager.formatDate(DatePosted)}</div>
+                <div>${TextMessage}</div>
+            </div>
         </p>
     </script>
 
     <script type="text/javascript">
-
 
         var Manager = {
             formatDate: function (date) {
@@ -82,7 +109,8 @@
 
         $(function () {
 
-            var userName = null, tips = $(".validateTips"), txtUserName = $("#userName"), skip = 0;
+            var userName = null, tips = $(".validateTips"),
+                txtUserName = $("#userName"), skip = 0, reachedEnd = false;;
 
             var dialog = $("#dialog-form").dialog({
                 autoOpen: true,
@@ -103,10 +131,69 @@
                     userName = txtUserName.val();
                     dialog.dialog("close");
                     $("#btnPost").attr('disabled', false);
+                    $(".btnComment").attr('disabled', false);
                     $('.userName').html("&#64;" + userName);
                     $('#txtMsg').focus();
                 }
                 return valid;
+            };
+
+            function getMessages() {
+                var data = {
+                    take: 10,
+                    skip: skip
+                };
+                console.log(data);
+                $.ajax("/api/messages", {
+                    data: data,
+                    dataType: "json",
+                    type: "GET",
+                    beforeSend: function (xhr) {
+                        $("#results").after($("<p class='loading'>Loading...</p>").fadeIn('slow')).data("loading", true);
+                    },
+                    success: function (data) {
+                        $(".loading").fadeOut('fast', function () {
+                            $(this).remove();
+                        });
+                        //console.log(data);
+                        if (data.length == 0) reachedEnd = true;
+                        $("#postTemplate").tmpl(data).appendTo("#results");
+                        $("#results").removeData("loading");
+                        $(".comment-form").submit(function (event) {
+                            var id = $(this).attr('msgId');
+                            addComment(id);
+                            event.preventDefault();
+                        });
+                        $('.showComments').on('click', function () {
+                            var id = $(this).attr('msgId');
+                            getComments(id);
+                            
+                        });
+                    },
+                    error: function (e, s) {
+                        console.log(e);
+                    }
+                });
+                skip += 10;
+            };
+
+            function getComments(messageId) {
+                $.ajax("/api/comments", {
+                    data: {
+                        messageId: messageId
+                    },
+                    dataType: "json",
+                    type: "GET",
+                    success: function (data) {
+                        $("#commentTemplate").tmpl(data).appendTo('#comments_' + messageId);
+                        $('#comments_' + messageId).removeClass('hidden');
+                        $('#showComments_' + messageId).addClass('hidden');
+                        $('#comment-form_' + messageId).removeClass('hidden');
+                    },
+                    error: function (e, s) {
+                        console.log(e);
+                    }
+                });
             };
 
             function addMessage() {
@@ -117,7 +204,7 @@
                         Message: text
                     },
                     dataType: "json",
-                    type: "POST",
+                    type: "PUT",
                     success: function () {
                         var d = new Date();
                         var data = [{
@@ -136,20 +223,25 @@
                 });
             };
 
-            function getMessages() {
-                var data = {
-                    take: 10,
-                    skip: skip
-                };
-
-                $.ajax("/api/messages", {
-                    data: data,
+            function addComment(id) {
+                var text = $('#txtComment_' + id).val();
+                $.ajax("/api/comments/add", {
+                    data: {
+                        MessageId: id,
+                        UserName: userName,
+                        Message: text
+                    },
                     dataType: "json",
-                    type: "GET",
-                    success: function (data) {
-                        console.log(data);
-                        $("#postTemplate").tmpl(data).appendTo("#results");
-                        skip += 10;
+                    type: "PUT",
+                    success: function () {
+                        var d = new Date();
+                        var data = [{
+                            TextMessage: text.trim(),
+                            UserName: userName,
+                            DatePosted: Manager.formatDate()
+                        }];
+                        $('#txtComment_' + id).val('');
+                        $("#commentTemplate").tmpl(data).prependTo("#comments_" + id);
                     },
                     error: function (e, s) {
                         console.log(e);
@@ -157,10 +249,12 @@
                 });
             };
 
+            
+
             function updateTips(t) {
                 tips
-                    .text(t)
-                    .addClass("ui-state-highlight");
+                .text(t)
+                .addClass("ui-state-highlight");
                 setTimeout(function () {
                     tips.removeClass("ui-state-highlight", 1500);
                 }, 500);
@@ -177,17 +271,18 @@
                 }
             };
 
-            //$('#results').jscroll();
+            $(window).on('scroll', function () {
+                if (reachedEnd) return;
+                var $results = $("#results");
+                var wintop = $(window).scrollTop(), docheight = $(document).height(), winheight = $(window).height();
+                var scrolltrigger = 0.99;
 
-            $(window).endlessScroll({
-                fireOnce: false,
-                fireDelay: 5,
-                loader: '<div class="loading"><div>',
-                callback: function (p) {
-                    alert();
-                    getMessages();
+                if ((wintop / (docheight - winheight)) > scrolltrigger) {
+                    if (!$results.data("loading")) {
+                        getMessages();
+                    }
                 }
-            });
+            }).scroll();
 
             $("#post-form").submit(function (event) {
                 addMessage();
@@ -198,6 +293,8 @@
                 doLogin();
                 event.preventDefault();
             });
+
+
 
             dialog.dialog("open");
             getMessages();

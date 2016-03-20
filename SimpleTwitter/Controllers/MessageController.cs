@@ -26,7 +26,7 @@ namespace SimpleTwitter.Controllers
 
         [Route("messages"), HttpGet]
         [ResponseType(typeof(List<MessageModel>))]
-        public IHttpActionResult Get(int take, int skip)
+        public IHttpActionResult GetMessages(int take, int skip)
         {
             try
             {
@@ -50,21 +50,18 @@ namespace SimpleTwitter.Controllers
             return Ok(msgs);
         }
 
-        [Route("messages/add"), HttpPost]
-        public IHttpActionResult Post(MesageSubmitModel model)
+        [Route("messages/add"), HttpPut]
+        public IHttpActionResult AddMessage(MesageSubmitModel model)
         {
             var id = _bllService.AddMessage(new MessageModel { TextMessage = model.Message.Trim(), UserName = model.UserName.Trim() });
             return Ok(id);
         }
 
-        // PUT api/values/5
-        public void Put(int id, [FromBody]string value)
+        [Route("comments/add"), HttpPut]
+        public IHttpActionResult Comment(MesageSubmitModel model)
         {
-        }
-
-        // DELETE api/values/5
-        public void Delete(int id)
-        {
+            var id = _bllService.AddMessage(new MessageModel { MessageId = model.MessageId.Value, TextMessage = model.Message.Trim(), UserName = model.UserName.Trim() });
+            return Ok(id);
         }
     }
 }

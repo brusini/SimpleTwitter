@@ -54,28 +54,28 @@ namespace SimpleTwitter.Tests.Controllers
             // Assert
         }
 
-        [TestMethod]
-        public void Put()
-        {
-            // Arrange
-            MessageController controller = new MessageController();
+        //[TestMethod]
+        //public void Put()
+        //{
+        //    // Arrange
+        //    MessageController controller = new MessageController();
 
-            // Act
-            controller.Put(5, "value");
+        //    // Act
+        //    controller.Put(5, "value");
 
-            // Assert
-        }
+        //    // Assert
+        //}
 
-        [TestMethod]
-        public void Delete()
-        {
-            // Arrange
-            MessageController controller = new MessageController();
+        //[TestMethod]
+        //public void Delete()
+        //{
+        //    // Arrange
+        //    MessageController controller = new MessageController();
 
-            // Act
-            controller.Delete(5);
+        //    // Act
+        //    controller.Delete(5);
 
-            // Assert
-        }
+        //    // Assert
+        //}
     }
 }
