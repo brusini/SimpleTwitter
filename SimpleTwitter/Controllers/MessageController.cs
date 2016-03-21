@@ -28,10 +28,13 @@ namespace SimpleTwitter.Controllers
         [ResponseType(typeof(List<MessageModel>))]
         public IHttpActionResult GetMessages(int take, int skip)
         {
+            if (take <= 0) ModelState.AddModelError("take", "Bad value of 'take' param");
+            if (skip < 0) ModelState.AddModelError("skip", "Bad value of 'skip' param");
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
             try
             {
-                var serv = new TwitterService();
-                var msgs = serv.GetMessages(take, skip);
+                var msgs = _bllService.GetMessages(take, skip);
 
                 return Ok(msgs);
             }
@@ -45,6 +48,9 @@ namespace SimpleTwitter.Controllers
         [ResponseType(typeof(List<MessageModel>))]
         public IHttpActionResult GetComments(int messageId)
         {
+            if (messageId <= 0) ModelState.AddModelError("messageId", "Bad value of 'messageId' param");
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
             var msgs = _bllService.GetComments(messageId);
 
             return Ok(msgs);
@@ -53,6 +59,8 @@ namespace SimpleTwitter.Controllers
         [Route("messages/add"), HttpPut]
         public IHttpActionResult AddMessage(MesageSubmitModel model)
         {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
             var id = _bllService.AddMessage(new MessageModel { TextMessage = model.Message.Trim(), UserName = model.UserName.Trim() });
             return Ok(id);
         }
@@ -60,6 +68,8 @@ namespace SimpleTwitter.Controllers
         [Route("comments/add"), HttpPut]
         public IHttpActionResult Comment(MesageSubmitModel model)
         {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
             var id = _bllService.AddMessage(new MessageModel { MessageId = model.MessageId.Value, TextMessage = model.Message.Trim(), UserName = model.UserName.Trim() });
             return Ok(id);
         }

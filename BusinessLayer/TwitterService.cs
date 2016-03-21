@@ -4,6 +4,7 @@ using BusinessLayer.Interfaces;
 using DataLayer;
 using Model;
 using Model.Interfaces;
+using TestDataGenerator;
 
 namespace BusinessLayer
 {
@@ -33,6 +34,36 @@ namespace BusinessLayer
         public int AddMessage(MessageModel model)
         {
             return _dataService.AddMessage(model);
+        }
+    }
+
+    public class MockTwitterService : IBusinessService
+    {
+        public int AddMessage(MessageModel model)
+        {
+            var catalog = new Catalog();
+            var instance = catalog.CreateInstance<int>();
+            return instance;
+        }
+
+        public List<MessageModel> GetComments(int messageId)
+        {
+            var catalog = new Catalog();
+            var instance = catalog.CreateInstance<List<MessageModel>>();
+            return instance;
+        }
+
+        public List<MessageModel> GetMessages(int take, int skip)
+        {
+            var catalog = new Catalog();
+            var result = new List<MessageModel>();
+            for (var i = 0; i < take; i++)
+            {
+                var instance = catalog.CreateInstance<MessageModel>();
+                result.Add(instance);
+            }
+
+            return result;
         }
     }
 }

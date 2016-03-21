@@ -4,10 +4,15 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div id="post-form">
+<div class="postForm" id="post-form">
     <form>
-        <input type="text" id="txtMsg" />
-        <input type="submit" id="btnPost" value="Post" title="Post" disabled="true" />
+        <div class="textarea">
+            <textarea id="txtMsg" rows="3" cols="100"></textarea>
+        </div>
+        <div class="validation-summary hidden"></div>
+        <div class="btn">
+            <input type="submit" id="btnPost" value="Post" title="Post" disabled="true" />
+        </div>
     </form>
 </div>
 
@@ -20,284 +25,40 @@
         </fieldset>
     </form>
 </div>
-<p>
-    <div id="results"></div>
-</p>
+
+<div class="results" id="results"></div>
 
 @section scripts{
-    <style>
-        label, input {
-            display: block;
-        }
-
-            input.text {
-                margin-bottom: 12px;
-                width: 95%;
-                padding: .4em;
-            }
-
-        fieldset {
-            padding: 0;
-            border: 0;
-            margin-top: 25px;
-        }
-
-        h1 {
-            font-size: 1.2em;
-            margin: .6em 0;
-        }
-
-        .ui-dialog .ui-state-error {
-            padding: .3em;
-        }
-
-        .validateTips {
-            border: 1px solid transparent;
-            padding: 0.3em;
-        }
-
-        .userName {
-            color: #fff;
-        }
-
-        .loading {
-            color: red;
-        }
-        .showComments{
-        cursor:pointer;
-        }
-    </style>
     <script id="postTemplate" type="text/x-jquery-tmpl">
-        <p>
-            <div>
-                <div>${UserName} ${Manager.formatDate(DatePosted)}</div>
-                <div>${TextMessage}</div>
+        <div class="post">
+            <div>${TextMessage}</div>
+            <div class="postDetails">
+                &#64;<b>${UserName}</b> ${Manager.formatDate(DatePosted)}
+                <a class="showComments" id="showComments_${Id}" msgId="${Id}">${Comments} comment(s)</a>
             </div>
             <div id="comments_${Id}">
-
             </div>
-            <div><a class="showComments" id="showComments_${Id}" msgId="${Id}">${Comments} comment(s)</a></div>
-            <div id="comments_${Id}"  class="hidden"></div>
+            <div id="comments_${Id}" class="hidden"></div>
             <div id="comment-form_${Id}" class="comment-form hidden" msgId="${Id}">
                 <form>
-                    <span>
-                        <input type="text" id="txtComment_${Id}" />
-                    </span>
-                    <span><input type="submit" class="btnComment" id="btnComment" value="Comment" title="Comment" disabled="true" /></span>
+                    <div class="textarea">
+                        <input type="text" id="txtComment_${Id}" rows="2" cols="500"/>
+                    </div>
+                    <div class="validation-comments validation-summary_${Id} hidden"></div>
+                    <div class="btn">
+                        <input type="submit" class="btnComment" id="btnComment" value="Comment" title="Comment" disabled="true" />
+                    </div>
+                    
                 </form>
             </div>
-            <hr />
-        </p>
+        </div>
     </script>
     <script id="commentTemplate" type="text/x-jquery-tmpl">
-        <p>
-            <div>
-                <div>${UserName} ${Manager.formatDate(DatePosted)}</div>
-                <div>${TextMessage}</div>
-            </div>
-        </p>
+        <div class="comment">
+            <div class="commentMsg">${TextMessage}</div>
+            <div class="commentDetail">${UserName} ${Manager.formatDate(DatePosted)}</div>
+        </div>
     </script>
 
-    <script type="text/javascript">
-
-        var Manager = {
-            formatDate: function (date) {
-                var d = date == null ? new Date() : new Date(date);
-                return $.datepicker.formatDate("M d, yy", d) + " " + d.getHours() + ":" + d.getMinutes();
-            }
-        };
-
-        $(function () {
-
-            var userName = null, tips = $(".validateTips"),
-                txtUserName = $("#userName"), skip = 0, reachedEnd = false;;
-
-            var dialog = $("#dialog-form").dialog({
-                autoOpen: true,
-                width: 450,
-                modal: true,
-                buttons: {
-                    "Login": doLogin
-                }
-            });
-
-            function doLogin() {
-                var valid = true;
-                var allFields = $([]).add(txtUserName);
-                allFields.removeClass("ui-state-error");
-
-                valid = valid && checkLength(txtUserName, "userName", 3, 16);
-                if (valid) {
-                    userName = txtUserName.val();
-                    dialog.dialog("close");
-                    $("#btnPost").attr('disabled', false);
-                    $(".btnComment").attr('disabled', false);
-                    $('.userName').html("&#64;" + userName);
-                    $('#txtMsg').focus();
-                }
-                return valid;
-            };
-
-            function getMessages() {
-                var data = {
-                    take: 10,
-                    skip: skip
-                };
-                console.log(data);
-                $.ajax("/api/messages", {
-                    data: data,
-                    dataType: "json",
-                    type: "GET",
-                    beforeSend: function (xhr) {
-                        $("#results").after($("<p class='loading'>Loading...</p>").fadeIn('slow')).data("loading", true);
-                    },
-                    success: function (data) {
-                        $(".loading").fadeOut('fast', function () {
-                            $(this).remove();
-                        });
-                        //console.log(data);
-                        if (data.length == 0) reachedEnd = true;
-                        $("#postTemplate").tmpl(data).appendTo("#results");
-                        $("#results").removeData("loading");
-                        $(".comment-form").submit(function (event) {
-                            var id = $(this).attr('msgId');
-                            addComment(id);
-                            event.preventDefault();
-                        });
-                        $('.showComments').on('click', function () {
-                            var id = $(this).attr('msgId');
-                            getComments(id);
-                            
-                        });
-                    },
-                    error: function (e, s) {
-                        console.log(e);
-                    }
-                });
-                skip += 10;
-            };
-
-            function getComments(messageId) {
-                $.ajax("/api/comments", {
-                    data: {
-                        messageId: messageId
-                    },
-                    dataType: "json",
-                    type: "GET",
-                    success: function (data) {
-                        $("#commentTemplate").tmpl(data).appendTo('#comments_' + messageId);
-                        $('#comments_' + messageId).removeClass('hidden');
-                        $('#showComments_' + messageId).addClass('hidden');
-                        $('#comment-form_' + messageId).removeClass('hidden');
-                    },
-                    error: function (e, s) {
-                        console.log(e);
-                    }
-                });
-            };
-
-            function addMessage() {
-                var text = $('#txtMsg').val();
-                $.ajax("/api/messages/add", {
-                    data: {
-                        UserName: userName,
-                        Message: text
-                    },
-                    dataType: "json",
-                    type: "PUT",
-                    success: function () {
-                        var d = new Date();
-                        var data = [{
-                            TextMessage: text.trim(),
-                            UserName: userName,
-                            DatePosted: Manager.formatDate()
-                        }];
-
-                        $("#postTemplate").tmpl(data).prependTo("#results");
-                        $('#txtMsg').val('');
-                        $('#txtMsg').focus();
-                    },
-                    error: function (e, s) {
-                        console.log(e);
-                    }
-                });
-            };
-
-            function addComment(id) {
-                var text = $('#txtComment_' + id).val();
-                $.ajax("/api/comments/add", {
-                    data: {
-                        MessageId: id,
-                        UserName: userName,
-                        Message: text
-                    },
-                    dataType: "json",
-                    type: "PUT",
-                    success: function () {
-                        var d = new Date();
-                        var data = [{
-                            TextMessage: text.trim(),
-                            UserName: userName,
-                            DatePosted: Manager.formatDate()
-                        }];
-                        $('#txtComment_' + id).val('');
-                        $("#commentTemplate").tmpl(data).prependTo("#comments_" + id);
-                    },
-                    error: function (e, s) {
-                        console.log(e);
-                    }
-                });
-            };
-
-            
-
-            function updateTips(t) {
-                tips
-                .text(t)
-                .addClass("ui-state-highlight");
-                setTimeout(function () {
-                    tips.removeClass("ui-state-highlight", 1500);
-                }, 500);
-            }
-
-            function checkLength(o, n, min, max) {
-                if (o.val().length > max || o.val().length < min) {
-                    o.addClass("ui-state-error");
-                    updateTips("Length of " + n + " must be between " +
-                        min + " and " + max + ".");
-                    return false;
-                } else {
-                    return true;
-                }
-            };
-
-            $(window).on('scroll', function () {
-                if (reachedEnd) return;
-                var $results = $("#results");
-                var wintop = $(window).scrollTop(), docheight = $(document).height(), winheight = $(window).height();
-                var scrolltrigger = 0.99;
-
-                if ((wintop / (docheight - winheight)) > scrolltrigger) {
-                    if (!$results.data("loading")) {
-                        getMessages();
-                    }
-                }
-            }).scroll();
-
-            $("#post-form").submit(function (event) {
-                addMessage();
-                event.preventDefault();
-            });
-
-            $("#dialog-form").submit(function (event) {
-                doLogin();
-                event.preventDefault();
-            });
-
-
-
-            dialog.dialog("open");
-            getMessages();
-        });
-    </script>
+    @Scripts.Render("~/bundles/simpleTwitter")
 }
