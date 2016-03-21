@@ -1,24 +1,64 @@
-﻿<div class="jumbotron">
-    <h1>Simple Twitter</h1>
-    <p class="lead">Just simple web APP </p>
-    <p>@Html.ActionLink("Run", "Index", "Twitter", new { area = "" }, new { @class = "btn btn-primary btn-lg" })</p>
+﻿
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="postForm" id="post-form">
+    <form>
+        <div class="textarea">
+            <textarea id="txtMsg" rows="3" cols="100"></textarea>
+        </div>
+        <div class="validation-summary hidden"></div>
+        <div class="btn">
+            <input type="submit" id="btnPost" value="Post" title="Post" disabled="true" />
+        </div>
+    </form>
 </div>
-<div class="row">
-    <div class="col-md-4">
-        <h2>Getting started</h2>
-        <p>ASP.NET Web API is a framework that makes it easy to build HTTP services that reach
-        a broad range of clients, including browsers and mobile devices. ASP.NET Web API
-        is an ideal platform for building RESTful applications on the .NET Framework.</p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301870">Learn more &raquo;</a></p>
-    </div>
-    <div class="col-md-4">
-        <h2>Get more libraries</h2>
-        <p>NuGet is a free Visual Studio extension that makes it easy to add, remove, and update libraries and tools in Visual Studio projects.</p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301871">Learn more &raquo;</a></p>
-    </div>
-    <div class="col-md-4">
-        <h2>Web Hosting</h2>
-        <p>You can easily find a web hosting company that offers the right mix of features and price for your applications.</p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301872">Learn more &raquo;</a></p>
-    </div>
+
+<div id="dialog-form" title="Login">
+    <form>
+        <fieldset>
+            <label for="userName">User Name</label>
+            <input type="text" name="userName" id="userName" value="" class="text ui-widget-content ui-corner-all">
+            <input type="submit" id="sbmUserName" tabindex="-1" style="position: absolute; top: -1000px">
+        </fieldset>
+    </form>
 </div>
+
+<div class="results" id="results"></div>
+
+@section scripts{
+    <script id="postTemplate" type="text/x-jquery-tmpl">
+        <div class="post">
+            <div>${TextMessage}</div>
+            <div class="postDetails">
+                &#64;<b>${UserName}</b> ${Manager.formatDate(DatePosted)}
+                <a class="showComments" id="showComments_${Id}" msgId="${Id}">${Comments} comment(s)</a>
+            </div>
+            <div id="comments_${Id}">
+            </div>
+            <div id="comments_${Id}" class="hidden"></div>
+            <div id="comment-form_${Id}" class="comment-form hidden" msgId="${Id}">
+                <form>
+                    <div class="textarea">
+                        <input type="text" id="txtComment_${Id}" rows="2" cols="500" />
+                    </div>
+                    <div class="validation-comments validation-summary_${Id} hidden"></div>
+                    <div class="btn">
+                        <input type="submit" class="btnComment" id="btnComment" value="Comment" title="Comment" disabled="true" />
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </script>
+    <script id="commentTemplate" type="text/x-jquery-tmpl">
+        <div class="comment">
+            <div class="commentMsg">${TextMessage}</div>
+            <div class="commentDetail">${UserName} ${Manager.formatDate(DatePosted)}</div>
+        </div>
+    </script>
+
+    @Scripts.Render("~/bundles/simpleTwitter")
+}
